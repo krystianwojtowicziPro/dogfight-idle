@@ -14,6 +14,7 @@ class SplashScene extends Phaser.Scene {
   }
 
   create(data) {
+    this.enemies = [];
     this.ship = this.physics.add.sprite(0, 0, "mother").setScale(0.5);
     const { width, height } = this.sys.game.canvas;
     this.ship.x = width / 2;
@@ -25,19 +26,18 @@ class SplashScene extends Phaser.Scene {
     createMirrors.call(this, 50, y, "mother");
 
     this.missileGroup = this.physics.add.group();
+    this.missileGroup1 = this.physics.add.group();
+
+    this.physics.add.colider(
+      this.missileGroup,
+      enemies,
+      function (missleCollide, enemyCollide) {
+        console.log("2");
+      }
+    );
   }
 
   update(time, delta) {
-    const angle = Phaser.Math.Angle.Between(
-      enemies[0].x,
-      enemies[0].y,
-      this.ship.x,
-      this.ship.y
-    );
-    var velocityX1 = Math.cos(angle) * 50;
-    var velocityY1 = Math.sin(angle) * 50;
-    // enemies[0].setVelocity(velocityX1, velocityY1);
-
     // this.keys = this.input.keyboard.createCursorKeys();aw
     const keyW = this.input.keyboard.addKey("w");
     const keyA = this.input.keyboard.addKey("a");
@@ -50,9 +50,38 @@ class SplashScene extends Phaser.Scene {
     const velocityY = 1 * Math.sin(angleInRadians);
 
     for (let i = 0; i < enemies.length; i++) {
+      const currentTime = this.time.now;
       // enemies[i].x += 2;
-      enemies[i].setVelocity(velocityX1, velocityY1);
-      if (enemies[i].x > 0) enemiesSigns[i].setAlpha(0);
+      const angle = Phaser.Math.Angle.Between(
+        enemies[0].x,
+        enemies[0].y,
+        this.ship.x,
+        this.ship.y
+      );
+      const velocityX = Math.cos(angle) * 50;
+      const velocityY = Math.sin(angle) * 50;
+      enemies[i].setVelocity(velocityX, velocityY);
+      const angleToShip = Math.atan2(
+        this.ship.y - enemies[i].y,
+        this.ship.x - enemies[i].x
+      );
+      const angleInDegrees = Phaser.Math.RadToDeg(angleToShip);
+      enemies[i].rotation = Phaser.Math.DegToRad(angleInDegrees);
+      if (enemies[i].x > 0) {
+        enemiesSigns[i].setAlpha(0);
+        const createMissileEnemies = () => {
+          const aNewMissile = this.physics.add
+            .sprite(enemies[i].x, enemies[i].y, "missile")
+            .setRotation(angleToShip + Phaser.Math.DegToRad(90));
+          this.missileGroup1.add(aNewMissile);
+
+          aNewMissile.startAngle = angleToShip;
+        };
+        if (currentTime - lastTime >= 5000) {
+          createMissileEnemies.call(this);
+          lastTime = currentTime;
+        }
+      }
     }
 
     if (keyW.isDown) {
@@ -70,10 +99,12 @@ class SplashScene extends Phaser.Scene {
       flagOfMissile = false;
 
       const createMissile = () => {
-        const aNewmissile = this.physics.add
+        const aNewMissile = this.physics.add
           .sprite(this.ship.x, this.ship.y, "missile")
           .setRotation(angleInRadians + Phaser.Math.DegToRad(90));
-        this.missileGroup.add(aNewmissile);
+        this.missileGroup.add(aNewMissile);
+
+        aNewMissile.startAngle = angleInRadians;
       };
 
       createMissile.call(this);
@@ -88,11 +119,18 @@ class SplashScene extends Phaser.Scene {
       clearInterval(missileInterval);
     }
 
-    this.missileGroup.children.each(function (item) {
-      // item.y = item.y - 15;
-      item.x += velocityX;
-      item.y += velocityY;
-    });
+    function updateShot(item) {
+      const missileAngleInRadians = item.startAngle;
+      const missileVelocityX = 1 * Math.cos(missileAngleInRadians);
+      const missileVelocityY = 1 * Math.sin(missileAngleInRadians);
+
+      item.x += missileVelocityX;
+      item.y += missileVelocityY;
+    }
+
+    this.missileGroup.children.each(updateShot);
+
+    this.missileGroup1.children.each(updateShot);
 
     // if (this.ship.y > 720) alert("game over");
   }
@@ -111,5 +149,6 @@ const enemies = [];
 const enemiesSigns = [];
 let flagOfMissile = true;
 let missileInterval;
+let lastTime = 0;
 
 export default SplashScene;
