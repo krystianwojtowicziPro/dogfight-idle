@@ -14,7 +14,6 @@ class SplashScene extends Phaser.Scene {
   }
 
   create(data) {
-    this.enemies = [];
     this.ship = this.physics.add.sprite(0, 0, "mother").setScale(0.5);
     const { width, height } = this.sys.game.canvas;
     this.ship.x = width / 2;
@@ -28,12 +27,14 @@ class SplashScene extends Phaser.Scene {
     this.missileGroup = this.physics.add.group();
     this.missileGroup1 = this.physics.add.group();
 
-    this.physics.add.colider(
+    this.physics.add.collider(
       this.missileGroup,
       enemies,
       function (missleCollide, enemyCollide) {
-        console.log("2");
-      }
+        missleCollide.destroy();
+        enemyCollide.destroy();
+        enemies.length--;
+      }.bind(this)
     );
   }
 
@@ -53,8 +54,8 @@ class SplashScene extends Phaser.Scene {
       const currentTime = this.time.now;
       // enemies[i].x += 2;
       const angle = Phaser.Math.Angle.Between(
-        enemies[0].x,
-        enemies[0].y,
+        enemies[i].x,
+        enemies[i].y,
         this.ship.x,
         this.ship.y
       );
@@ -83,7 +84,6 @@ class SplashScene extends Phaser.Scene {
         }
       }
     }
-
     if (keyW.isDown) {
       // Zastosowanie wektora prędkości do obiektu ship
       this.ship.x += velocityX;
@@ -121,8 +121,8 @@ class SplashScene extends Phaser.Scene {
 
     function updateShot(item) {
       const missileAngleInRadians = item.startAngle;
-      const missileVelocityX = 1 * Math.cos(missileAngleInRadians);
-      const missileVelocityY = 1 * Math.sin(missileAngleInRadians);
+      const missileVelocityX = 2 * Math.cos(missileAngleInRadians);
+      const missileVelocityY = 2 * Math.sin(missileAngleInRadians);
 
       item.x += missileVelocityX;
       item.y += missileVelocityY;
