@@ -22,7 +22,9 @@ class SplashScene extends Phaser.Scene {
 
     const x = -100;
     const y = Math.random() * 720;
+    const y1 = Math.random() * 720;
     createMirrors.call(this, 50, y, "mother");
+    createMirrors.call(this, 50, y1, "mother");
 
     this.missileGroup = this.physics.add.group();
     this.missileGroup1 = this.physics.add.group();
